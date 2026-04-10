@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000/api";
+const BASE_URL = "https://folio-backend-b20p.onrender.com/api";
 
 export async function uploadFile(file: File) {
   const formData = new FormData();
