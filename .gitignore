@@ -1,6 +1,7 @@
 # API Keys and Environment Variables
 .env
 .env.*
+!.env.example
 
 # Python
 __pycache__/
@@ -20,7 +21,6 @@ frontend/.eslintcache
 uploads/
 *.pdf
 *.docx
-*.txt
 
 # Editor / OS
 .DS_Store
