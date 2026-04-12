@@ -10,8 +10,8 @@ try:
 except ImportError:
     python_docx = None
 
-CHUNK_SIZE    = 500
-CHUNK_OVERLAP = 50
+CHUNK_SIZE    = 1000
+CHUNK_OVERLAP = 200
 
 def extract_pdf(path):
     pages = []
@@ -57,7 +57,7 @@ def chunk_pages(pages, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
         while start < len(text):
             end = min(start + chunk_size, len(text))
             c = text[start:end].strip()
-            if len(c) > 40:
+            if len(c) > 20:
                 chunks.append({"text": c, "page": page_num, "chunk_id": len(chunks)})
             start += chunk_size - overlap
     return chunks

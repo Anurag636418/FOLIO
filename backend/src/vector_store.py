@@ -7,7 +7,7 @@ try:
 except ImportError:
     FAISS_OK = False
 
-TOP_K = 4
+TOP_K = 8
 
 HF_API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
 
@@ -18,20 +18,29 @@ class VectorStore:
     def _get_embeddings(self, texts):
         api_key = os.environ.get("HF_API_KEY")
         if not api_key:
-            print("Warning: HF_API_KEY not set. Using empty embeddings.")
-            return np.zeros((len(texts), 384), dtype=np.float32)
+            raise ValueError("HF_API_KEY environment variable is not set. Cannot generate embeddings.")
             
         headers = {"Authorization": f"Bearer {api_key}"}
-        payload = {"inputs": texts, "options": {"wait_for_model": True}}
         
-        try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload)
-            response.raise_for_status()
-            embeddings = response.json()
-            return np.array(embeddings, dtype=np.float32)
-        except Exception as e:
-            print(f"Error calling HF Inference API: {e}")
-            return np.zeros((len(texts), 384), dtype=np.float32)
+        # Batch texts to avoid HF API payload limits
+        BATCH_SIZE = 20
+        all_embeddings = []
+        
+        for i in range(0, len(texts), BATCH_SIZE):
+            batch = texts[i:i + BATCH_SIZE]
+            payload = {"inputs": batch, "options": {"wait_for_model": True}}
+            
+            try:
+                response = requests.post(HF_API_URL, headers=headers, json=payload)
+                response.raise_for_status()
+                embeddings = response.json()
+                all_embeddings.extend(embeddings)
+            except Exception as e:
+                print(f"Error calling HF Inference API for batch {i//BATCH_SIZE}: {e}")
+                # Fall back to zero vectors for failed batch
+                all_embeddings.extend([[0.0] * 384] * len(batch))
+        
+        return np.array(all_embeddings, dtype=np.float32)
 
     def add_document(self, filename, chunks):
         if not chunks: 
