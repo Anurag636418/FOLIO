@@ -1,37 +1,70 @@
 # 📓 Folio
-Built a document Q&A system using Retrieval-Augmented Generation (RAG) that allows users to upload PDFs, DOCX, and TXT files and ask natural language questions over them. Used FAISS for vector similarity search, sentence-transformers for embeddings, and Groq (LLaMA 3.1) as the generation backend. Solves the problem of querying large private documents without expensive fine-tuning or exceeding LLM context limits.
 
-## 🛠️ Core Stack
-* **Frontend**: React (Vite) + TypeScript
-* **Backend**: FastAPI (Python)
-* **Vector Store**: FAISS
-* **LLM**: LLaMA 3.1 via Groq API
+A document Q&A system using Retrieval-Augmented Generation (RAG). Upload PDFs, DOCX, or TXT files and ask natural language questions over them. Uses FAISS for vector search, HuggingFace Inference API for embeddings, and Groq (LLaMA 3.3-70b) as the LLM.
 
-## 🚀 Quick Start
+## Stack
 
-**1. Clone and Install Backend**
+- **Frontend**: React + Vite + TypeScript → deployed on Vercel
+- **Backend**: FastAPI (Python) → deployed on Render
+- **Vector Store**: FAISS (in-memory)
+- **Embeddings**: HuggingFace Inference API (`all-MiniLM-L6-v2`)
+- **LLM**: LLaMA 3.3-70b via Groq API (Gemini 2.0 Flash as fallback)
+
+## Local Development
+
+### Backend
+
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**2. Add your API Keys**
-Create a `.env` file in the root directory:
+Create `backend/.env`:
 ```env
-GROQ_API_KEY=your_api_key_here
+GROQ_API_KEY=your_groq_key
+HF_API_KEY=your_huggingface_key
+GEMINI=your_gemini_key          # optional fallback
+ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-**3. Install Frontend and Run**
+```bash
+uvicorn main:app --reload
+```
+
+### Frontend
+
 ```bash
 cd frontend
 npm install
+```
+
+Create `frontend/.env.local`:
+```env
+VITE_API_URL=http://localhost:8000/api
+```
+
+```bash
 npm run dev
 ```
 
-**4. Start the Python Backend** *(In a separate terminal)*
-```bash
-cd backend
-uvicorn main:app --reload
-```
+## Deployment
+
+### Render (backend)
+Set these environment variables in the Render dashboard:
+- `GROQ_API_KEY`
+- `HF_API_KEY`
+- `ALLOWED_ORIGINS=https://folio-omega-pied.vercel.app`
+- `GEMINI` (optional)
+
+### Vercel (frontend)
+Set this environment variable in Vercel project settings:
+- `VITE_API_URL=https://folio-backend-b20p.onrender.com/api`
+
+## Limits (free tier)
+- Max file size: 10MB
+- Max PDF pages indexed: 80
+- Max chunks per document: 400
+- Upload rate limit: 5 per minute per IP
+- Chat rate limit: 30 per minute per IP

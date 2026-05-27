@@ -13,6 +13,7 @@ function App() {
   const [page, setPage] = useState<'landing' | 'app'>('landing')
   const [docs, setDocs] = useState<string[]>([])
   const [activeDoc, setActiveDoc] = useState<string | null>(null)
+  const [sessionToken, setSessionToken] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -33,6 +34,7 @@ function App() {
       const res = await uploadFile(file)
       if (!docs.includes(res.filename)) setDocs([...docs, res.filename])
       setActiveDoc(res.filename)
+      setSessionToken(res.session_token)
       setMessages([])
     } catch (err: any) {
       alert("Error: " + err.message)
@@ -54,7 +56,7 @@ function App() {
       let fullResponse = ''
       setMessages(prev => [...prev, { role: 'assistant', content: '' }])
       
-      const generator = chatStream(query, activeDoc, messages)
+      const generator = chatStream(query, activeDoc, sessionToken ?? "", messages)
       for await (const chunk of generator) {
         if (chunk.error) {
           fullResponse = chunk.error
