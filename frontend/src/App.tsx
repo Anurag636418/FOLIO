@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Plus, Send, FileText, BookOpen } from 'lucide-react'
 import { uploadFile, chatStream } from './api'
+import ReactMarkdown from 'react-markdown'
 import './index.css'
 
 interface Message {
@@ -13,7 +14,7 @@ function App() {
   const [page, setPage] = useState<'landing' | 'app'>('landing')
   const [docs, setDocs] = useState<string[]>([])
   const [activeDoc, setActiveDoc] = useState<string | null>(null)
-  const [sessionToken, setSessionToken] = useState<string | null>(null)
+  const [sessionTokens, setSessionTokens] = useState<Record<string, string>>({})
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -34,7 +35,7 @@ function App() {
       const res = await uploadFile(file)
       if (!docs.includes(res.filename)) setDocs([...docs, res.filename])
       setActiveDoc(res.filename)
-      setSessionToken(res.session_token)
+      setSessionTokens(prev => ({ ...prev, [res.filename]: res.session_token }))
       setMessages([])
     } catch (err: any) {
       alert("Error: " + err.message)
@@ -56,7 +57,7 @@ function App() {
       let fullResponse = ''
       setMessages(prev => [...prev, { role: 'assistant', content: '' }])
       
-      const generator = chatStream(query, activeDoc, sessionToken ?? "", messages)
+      const generator = chatStream(query, activeDoc, sessionTokens[activeDoc] ?? "", messages)
       for await (const chunk of generator) {
         if (chunk.error) {
           fullResponse = chunk.error
@@ -159,7 +160,7 @@ function App() {
                     {m.role === 'user' ? 'U' : 'F'}
                   </div>
                   <div className="message-content">
-                    <div dangerouslySetInnerHTML={{ __html: m.content.replace(/\n/g, '<br/>') }} />
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
                     {m.sources && m.sources.length > 0 && (
                       <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap' }}>
                         {m.sources.map((s, si) => (

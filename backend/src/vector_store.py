@@ -6,9 +6,10 @@ import numpy as np
 
 try:
     import faiss
-    FAISS_OK = True
-except ImportError:
-    FAISS_OK = False
+except ImportError as e:
+    raise RuntimeError(
+        "faiss-cpu is not installed. Run: pip install faiss-cpu"
+    ) from e
 
 TOP_K = 12
 MAX_CHUNKS = 400  # Hard cap per document to prevent OOM
